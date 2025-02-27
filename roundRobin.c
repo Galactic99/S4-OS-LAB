@@ -51,7 +51,7 @@ int main() {
     };
     
     int n = sizeof(processes) / sizeof(Process);
-    int quantum = 4;
+    int quantum = 3;
     int currenttime = 0;
     int completed = 0;
 
