@@ -1,41 +1,72 @@
 #include <stdio.h>
-#include <string.h>
+#include <stdlib.h>
 
-void worstfit(int blockSize[], int m, int processSize[], int n){
-	int allocation[n];
-	memset(allocation, -1, sizeof(allocation));
-	
-	for (int i=0;i<n;i++){
-		int max=-1;
-		for(int j=0;j<m;j++){
-			if(blockSize[j]>=processSize[i]){
-				if(max==-1 || blockSize[max]<blockSize[j])
-					max = j;
-			}
-		}
-		if(max!=-1){
-			allocation[i]=max;
-			blockSize[max]-=processSize[i];
-		}
-	}
-	printf("\nProcess No.\tProcess Size\tBlock no.\n");
-        for (int i = 0; i < n; i++) {
-		printf(" %d\t\t%d\t\t", i + 1, processSize[i]);
-	        if (allocation[i] != -1)
-	    		printf("%d", allocation[i] + 1);
-		else
-			printf("Not Allocated");
-		printf("\n");
-    	}
-    	printf("Free Blocks\n");
-        for (int i = 0; i < m; i++) 
-        	printf("%d->",blockSize[i]);
+struct memory_block{
+    int size;
+    int proc_size;
+    int is_free;
+    struct memory_block* next;
+};
+
+struct memory_block* head = NULL;
+
+void create_memory(int size){
+    struct memory_block* new_block = (struct memory_block*)malloc(sizeof(struct memory_block));
+    new_block->size = size;
+    new_block->is_free = 1;
+    
+    if(head == NULL){
+        head = new_block;
+        new_block->next = NULL;
+    }
+    else {
+        new_block->next = head;
+        head = new_block;
+    }
+}
+
+int allocate_memory(int block_size){
+    struct memory_block* ptr = head;
+    struct memory_block* best = NULL;
+    
+    while(ptr){
+        if(ptr->is_free && ptr->size >= block_size){
+            if(best == NULL || ptr->size > best->size){
+                best = ptr;
+            }
+        }
+        ptr = ptr->next;
+    }
+    
+    if(best){
+        best->is_free = 0;
+        best->proc_size = block_size;
+    }
+}
+
+void print_memory(){
+    struct memory_block * ptr = head;
+    while(ptr){
+        printf("Block Size: %d\t\t Process Size: %d\t\t Status: %d\n", ptr->size, ptr->proc_size, ptr->is_free);
+        ptr = ptr->next;
+    }
 }
 
 void main(){
-	int blockSize[] = {100, 500, 200, 300, 600};
-	int processSize[] = {212, 417, 112, 426};
-	int m = sizeof(blockSize) / sizeof(blockSize[0]);
-	int n = sizeof(processSize) / sizeof(processSize[0]);
-	worstfit(blockSize, m, processSize, n);
+    create_memory(100);
+	create_memory(500);
+	create_memory(250);
+	create_memory(50);
+	create_memory(600);
+	
+	int ch = 1, size;
+	
+	while(ch){
+	    printf("Enter the size of the memory to be allocated: ");
+		scanf("%d",&size);
+		allocate_memory(size);
+		print_memory();
+		printf("Enter 1 to continue, To exit enter 0: ");
+		scanf("%d",&ch);
+	}
 }
